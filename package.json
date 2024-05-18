@@ -1,0 +1,16 @@
+{
+  "name": "exploring-backend",
+  "version": "1.0.0",
+  "description": "Following chai aur javscript backend youtube series",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Node",
+    "Backend",
+    "Express"
+  ],
+  "author": "Gajdhar Saif Ali",
+  "license": "ISC"
+}
