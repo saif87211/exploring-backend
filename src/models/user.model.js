@@ -44,7 +44,7 @@ const userSchema = new Schema(
       min: 8,
     },
     refreshToken: {
-      type: string,
+      type: String,
     },
   },
   { timestamps: true }
