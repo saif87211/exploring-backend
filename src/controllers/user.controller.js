@@ -1,7 +1,10 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import { uploadFileOnCloudinary } from "../utils/cloudinary.js";
+import {
+  uploadFileOnCloudinary,
+  deleteFileOnCloudinary,
+} from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 
@@ -177,8 +180,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-      .cookie("accessToken", accessToken)
-      .cookie("refreshToken", newRefreshToken)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", newRefreshToken, options)
       .json(
         new ApiResponse(
           200,
@@ -197,7 +200,7 @@ const chnageCurrentPassword = asyncHandler(async (req, res) => {
   const user = User.findById(req.user?._id);
   const isPasswordIsCorrect = await user.isPasswordCorrect(oldPassword);
 
-  if (!user) {
+  if (!isPasswordIsCorrect) {
     throw new ApiError(400, "Invalid old password.");
   }
 
@@ -245,18 +248,21 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Avatar files is missing.");
   }
 
-  const avatar = await uploadFileOnCloudinary(avatarLocalPath);
+  const newAvatar = await uploadFileOnCloudinary(avatarLocalPath);
 
-  if (!avatar.url) {
+  if (!newAvatar.url) {
     throw new ApiError(400, "Error while uploading avatar file.");
   }
+  const user = await User.findById(req.user?._id).select("-password");
 
-  const user = await User.findByIdAndUpdate(
-    req.user?._id,
-    { $set: { avatar: avatar.url } },
-    { new: true }
-  ).select("-password");
+  const oldAvatarUrl = user.avatar;
 
+  user.avatar = newAvatar.url;
+
+  await user.save({ validateBeforeSave: true });
+
+  const response = await deleteFileOnCloudinary(oldAvatarUrl);
+  // if(!response)
   return res
     .status(200)
     .json(new ApiResponse(200, user, "Avatar update successfully."));

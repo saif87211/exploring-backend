@@ -25,4 +25,17 @@ const uploadFileOnCloudinary = async (localFilePath) => {
   }
 };
 
-export { uploadFileOnCloudinary };
+const deleteFileOnCloudinary = async (url) => {
+  if (!url) return null;
+  
+  const urlParts = url.split("/");
+  const imagePublicId = urlParts[urlParts.length - 1].slice(0, -4);
+
+  const response = await cloudinary.uploader.destroy(imagePublicId, {
+    resource_type: "auto",
+  });
+
+  return response;
+};
+
+export { uploadFileOnCloudinary, deleteFileOnCloudinary };
