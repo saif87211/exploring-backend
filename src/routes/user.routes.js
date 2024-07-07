@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   chnageCurrentPassword,
+  updateUserAccountDetails,
   getCurrentUser,
   getUserChannelProfile,
   getUserWathcHistory,
@@ -32,11 +33,11 @@ router.route("/change-passowrd").post(verifyJWT, chnageCurrentPassword);
 router.route("/current-user").get(verifyJWT, getCurrentUser);
 router.route("/update-account").patch(verifyJWT, updateUserAccountDetails);
 
-router.route("/avatar").patch(jwt, upload.single("avatar"), updateUserAvatar);
+router.route("/avatar").patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
 
 router
   .route("/coverimage")
-  .patch(jwt, upload.single("coverImage"), updateUserCoverImage);
+  .patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage);
 
 router.route("/channel/:username").get(verifyJWT, getUserChannelProfile);
 
