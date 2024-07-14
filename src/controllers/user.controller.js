@@ -136,7 +136,7 @@ const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.body.user,
     {
-      $set: { refreshToken: undefined },
+      $unset: { refreshToken: 1 }, //remove field from the document
     },
     { new: true }
   );
@@ -151,7 +151,9 @@ const logoutUser = asyncHandler(async (req, res) => {
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
-  const incomingRefreshToken = req.cookie.refreshToken || req.body.refreshToken;
+
+  const incomingRefreshToken =
+    req.cookies.refreshToken || req.body.refreshToken;
 
   if (!incomingRefreshToken) {
     throw new ApiError(401, "Unathorized Request");
@@ -176,18 +178,19 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       httpOnly: true,
       secure: true,
     };
-    const { accessToken, newRefreshToken } =
-      await generateAccessAndRefreshToken(user._id);
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+      user._id
+    );
 
     return res
       .status(200)
       .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", newRefreshToken, options)
+      .cookie("refreshToken", refreshToken, options)
       .json(
         new ApiResponse(
           200,
-          { accessToken, newRefreshToken },
-          "Access token rfreshed..."
+          { accessToken, refreshToken },
+          "Access token refreshed..."
         )
       );
   } catch (error) {
@@ -198,7 +201,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 const chnageCurrentPassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
 
-  const user = User.findById(req.user?._id);
+  const user = await User.findById(req.user?._id);
   const isPasswordIsCorrect = await user.isPasswordCorrect(oldPassword);
 
   if (!isPasswordIsCorrect) {
@@ -262,8 +265,8 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 
   await user.save({ validateBeforeSave: true });
 
-  const response = await deleteFileOnCloudinary(oldAvatarUrl);
-  // if(!response)
+  await deleteFileOnCloudinary(oldAvatarUrl);
+
   return res
     .status(200)
     .json(new ApiResponse(200, user, "Avatar update successfully."));

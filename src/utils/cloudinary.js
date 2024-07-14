@@ -26,16 +26,18 @@ const uploadFileOnCloudinary = async (localFilePath) => {
 };
 
 const deleteFileOnCloudinary = async (url) => {
-  if (!url) return null;
-  
-  const urlParts = url.split("/");
-  const imagePublicId = urlParts[urlParts.length - 1].slice(0, -4);
+  try {
+    if (!url) return null;
 
-  const response = await cloudinary.uploader.destroy(imagePublicId, {
-    resource_type: "auto",
-  });
+    const urlParts = url.split("/");
+    const imagePublicId = urlParts[urlParts.length - 1].slice(0, -4);
 
-  return response;
+    const response = await cloudinary.uploader.destroy(imagePublicId);
+
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 export { uploadFileOnCloudinary, deleteFileOnCloudinary };
